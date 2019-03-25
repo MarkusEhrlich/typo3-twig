@@ -19,6 +19,7 @@
 namespace Cvc\Typo3\CvcTwig\ContentObject;
 
 use Cvc\Typo3\CvcTwig\Mvc\View\StandaloneView;
+use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
 use TYPO3\CMS\Frontend\ContentObject\AbstractContentObject;
@@ -100,6 +101,11 @@ class TwigTemplateContentObject extends AbstractContentObject
         $variables = $this->contentDataProcessor->process($this->cObj, $conf, $variables);
 
         $view = GeneralUtility::makeInstance(StandaloneView::class);
+
+        $settings = $this->getSettings($conf);
+        if ($settings) {
+            $view->assign('settings', $settings);
+        }
         $view->setTemplateName($templateName);
         $view->setTemplateRootPaths($templateRootPaths);
         $view->assignMultiple($variables);
@@ -164,5 +170,25 @@ class TwigTemplateContentObject extends AbstractContentObject
         $variables['current'] = $this->cObj->data[$this->cObj->currentValKey];
 
         return $variables;
+    }
+
+    /**
+     * Returns any TypoScript settings.
+     *
+     * @param array $conf Configuration
+     *
+     * @return array|null
+     */
+    private function getSettings(array $conf): ?array
+    {
+        if (isset($conf['settings.'])) {
+            /** @var TypoScriptService $typoScriptService */
+            $typoScriptService = GeneralUtility::makeInstance(TypoScriptService::class);
+            $settings = $typoScriptService->convertTypoScriptArrayToPlainArray($conf['settings.']);
+
+            return $settings;
+        }
+
+        return null;
     }
 }
